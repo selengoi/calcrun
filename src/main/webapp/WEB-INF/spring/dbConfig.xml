@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context.xsd                      
+                           http://www.springframework.org/schema/tx
+                           http://www.springframework.org/schema/tx/spring-tx.xsd">
+                           	                           
+	<tx:annotation-driven />
+	<context:component-scan base-package="ru.corp.az.azrun.azcalc.dao.impl"/>
+	
+	<bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
+		
+    <bean id="dataSource" class="oracle.ucp.jdbc.PoolDataSourceFactory" factory-method="getPoolDataSource" scope="singleton">
+    	<property name="URL"                               value="${url}"/>
+    	<property name="user"                              value="${user}"/>
+    	<property name="password"                          value="${password}"/>
+    	<property name="connectionFactoryClassName"        value="${connection_factory_class_name}"/>
+    	<property name="connectionPoolName"                value="${connection_pool_name}"/>
+    	<property name="initialPoolSize"                   value="${initial_pool_size}"/>
+    	<property name="minPoolSize"                       value="${min_pool_size}"/>
+    	<property name="maxPoolSize"                       value="${max_pool_size}"/>
+    	<property name="connectionWaitTimeout"             value="${connection_wait_timeout}"/>
+    	<property name="validateConnectionOnBorrow"        value="true"/>
+    	<property name="SQLForValidateConnection"          value="${sql_for_validate_connection}"/>
+        <property name="inactiveConnectionTimeout"         value="${inactive_connection_timeout}"/>
+    </bean>	
+    	
+    <bean id="hibernateSessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean" scope="singleton">
+        <property name="dataSource" ref="dataSource"/>
+         
+        <property name="mappingResources">
+            <list>
+                <value>azcalc.hbm.xml</value>
+            </list>
+        </property>
+        
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.Oracle12cDialect</prop>
+				<prop key="hibernate.show_sql">false</prop>
+			</props>
+		</property>        
+    </bean>    
+                
+    <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager" scope="singleton">
+    	<property name="sessionFactory" ref="hibernateSessionFactory"/>
+	</bean> 
+	
+	<bean class="ru.corp.az.azrun.common.db.ApplicationDataSource">
+		<property name="loggingDataSource" ref="dataSource"/>
+	</bean>	
+	                 	                                                                                                
+</beans>                           

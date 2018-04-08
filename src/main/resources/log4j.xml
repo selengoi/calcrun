@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<!--
+drop table log_tbl;
+
+create table node_log_tbl(timestamp#  timestamp,
+                     host        varchar2(255),
+                     priority    varchar2(16),
+                     location    varchar2(1024),
+                     message     clob)
+partition by range (timestamp#)
+interval (numtoyminterval(1,'month'))
+(
+   partition part_201605 values less than (timestamp '2016-06-01 00:00:00')
+);
+-->
+ 
+<log4j:configuration xmlns:log4j='http://jakarta.apache.org/log4j/' debug="false">
+	
+	<appender name="db" class="ru.corp.az.azrun.common.log4j12.CustomJDBCAppender">
+<!-- 		<param name="bufferSize" value="1"/> -->
+		<layout class="ru.corp.az.azrun.common.log4j12.HostLayout">
+			<param name="ConversionPattern" 
+			       value="declare
+			                msg clob := '%m';
+			              begin
+			       		  	insert into node_log_tbl(timestamp#, host, priority, location, message) values(to_timestamp('%d{yyyy-MM-dd HH:mm:ss.SSS}', 'YYYY-MM-DD HH24:MI:SS.FF3'), '%h', '%p', '%l', msg);
+			       		  end;" />
+		</layout>
+	</appender>		
+	
+	<appender name="file" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="file" value="${catalina.home}/logs/azrun.log"/>
+		<param name="datePattern" value="'.'yyyy-ww"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} :: %5p :: %m :: %l%n"/>
+		</layout>
+	</appender>
+	
+	<appender name="console" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%m :: %l%n"/>
+		</layout>
+	</appender>		
+		
+    <logger name="ru.corp.az.azrun.azcalc" additivity="false">
+	    <level value="info" />
+	    <appender-ref ref="file" />
+	    <appender-ref ref="db" />	    
+	</logger>	
+	
+    <logger name="ru.corp.az.azrun.azcalc.task.utils" additivity="false">
+	    <level value="info" />
+	    <appender-ref ref="file" />
+	</logger>	
+	
+    <logger name="ru.corp.az.azrun.test" additivity="false">
+	    <level value="info" />
+	    <appender-ref ref="console" />
+	</logger>		
+									
+	<root>
+		<level value="info" />
+		<appender-ref ref="file" />
+	</root>
+	
+</log4j:configuration>

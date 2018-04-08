@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/task 
+                           http://www.springframework.org/schema/task/spring-task-3.0.xsd
+                           http://www.springframework.org/schema/context 
+                           http://www.springframework.org/schema/context/spring-context.xsd
+						   http://www.springframework.org/schema/util 
+                           http://www.springframework.org/schema/util/spring-util.xsd">
+	
+	 
+	<!-- возможен только один PropertyPlaceholderConfigurer -->	 
+	<import resource="spring/propertyConfig.xml"/>
+	<import resource="spring/dbConfig.xml"/>
+	
+	<context:component-scan base-package="ru.corp.az.azrun.azcalc.task,
+	                                      ru.corp.az.azrun.common.dispose,
+	                                      ru.corp.az.azrun.common.db"/> 
+			
+	<bean id="taskExecutorMap" class="java.util.HashMap"/>
+	
+	<bean id="taskPool" class="ru.corp.az.azrun.common.taskx.GenericTaskPool"/>
+	
+	<!-- ========================= Schedule ========================= -->
+	<bean id="azQueueTask" class="ru.corp.az.azrun.azcalc.task.AzQueueTask" scope="singleton">
+		<property name="taskPool" ref="taskPool"/>
+	    <property name="taskExecutorMap" ref="taskExecutorMap"/>
+	</bean>
+		
+	<task:scheduler id="mainScheduler" pool-size="10"/>
+	
+	<task:scheduled-tasks scheduler="mainScheduler">
+	    <task:scheduled ref="azQueueTask" method="run" cron="*/10 * * * * ?"/>
+	</task:scheduled-tasks>  	
+	
+	<!-- ========================= JMX ========================= -->
+    <bean id="azRunJmxSpring" class="ru.corp.az.azrun.jmx.AzRunJmxSpring"/>		
+	
+    <bean id="exporter" class="org.springframework.jmx.export.MBeanExporter">
+        <property name="assembler" ref="assembler"/>
+        <property name="namingStrategy" ref="namingStrategy"/>
+        <property name="autodetect" value="true"/>
+    </bean>
+
+    <bean id="jmxAttributeSource"
+            class="org.springframework.jmx.export.annotation.AnnotationJmxAttributeSource"/>
+
+    <!-- will create management interface using annotation metadata -->
+    <bean id="assembler"
+            class="org.springframework.jmx.export.assembler.MetadataMBeanInfoAssembler">
+        <property name="attributeSource" ref="jmxAttributeSource"/>
+    </bean>
+
+    <!-- will pick up the ObjectName from the annotation -->
+    <bean id="namingStrategy"
+            class="org.springframework.jmx.export.naming.MetadataNamingStrategy">
+        <property name="attributeSource" ref="jmxAttributeSource"/>
+    </bean>		        
+			
+</beans>

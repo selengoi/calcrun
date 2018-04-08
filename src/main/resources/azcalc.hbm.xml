@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC 
+ "-//Hibernate/Hibernate Mapping DTD//EN"
+ "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd"> 
+ 
+<hibernate-mapping>
+
+   <class name="ru.corp.az.azrun.azcalc.dao.AzParallelDegree">
+      <id         name="typeName"           column="type_name"         type="string"/>
+      <property   name="parallelDegree"     column="parallel_degree"   type="int"/>          
+   </class>
+   
+   <class name="ru.corp.az.azrun.azcalc.dao.AzCalcData">
+      <id         name="idTask"     column="id_task"          type="long"/>
+      <property   name="typeName"   column="type_name"        type="string"/>  
+      <property   name="dcName"     column="dc_name"          type="string"/>        
+      <property   name="wsName"     column="ws_name"          type="string"/>          
+      <property   name="algName"    column="alg_name"         type="string"/>
+      <property   name="idTrace"    column="id_trace"         type="long"/>
+      <property   name="priority"   column="priority"         type="int"/>      
+   </class>   
+   
+   <sql-query name = "sql-getParallelDegree" callable = "true">
+	   <return class="ru.corp.az.azrun.azcalc.dao.AzParallelDegree"/>
+	   <![CDATA[ { ? = call calc_thread_manage_pkg.get_parallel_degree_fnc(:p_node)} ]]>
+   </sql-query>
+   
+   <sql-query name = "sql-getTask" callable = "true">
+	   <return class="ru.corp.az.azrun.azcalc.dao.AzCalcData"/>
+	   <![CDATA[ { ? = call calc_thread_manage_pkg.get_task_fnc(:p_node)} ]]>
+   </sql-query>   
+   
+   <sql-query name = "sql-nodeMon" callable = "true">
+	   <![CDATA[ {call calc_thread_manage_pkg.node_mon_prc(?)} ]]>
+   </sql-query>
+   
+   <sql-query name = "sql-runAzCalc" callable = "true">
+	   <![CDATA[ {call calc_thread_manage_pkg.calc_prc(?, ?)} ]]>
+   </sql-query>   
+
+   <sql-query name = "sql-resetTaskStatus" callable = "true">
+	   <![CDATA[ {? = call az_calc_pkg.update_task_status_fnc(p_id_task=>?,
+                                                              p_id_status=>az_queue.az_calc_pkg.c_id_new_status,
+                                                              p_recalc=>true,
+                                                              p_single_update=>true,
+                                                              p_node=>?,
+                                                              p_reason=>'Очистка очереди сервера приложений'
+                                                              )} ]]>
+   </sql-query>
+   
+   <sql-query name = "sql-startTaskStatusJob" callable = "true">
+	   <![CDATA[ {call az.az_settings_manage.set_number_setting(par_setting_name=>'sleep_time_update_status_tree', 
+	                                                            par_setting_value=>60)} ]]>
+   </sql-query>
+
+   <sql-query name = "sql-stopTaskStatusJob" callable = "true">
+	   <![CDATA[ {call az.az_settings_manage.set_number_setting(par_setting_name=>'sleep_time_update_status_tree', 
+	                                                            par_setting_value=>0)} ]]>
+   </sql-query>
+   
+</hibernate-mapping>
